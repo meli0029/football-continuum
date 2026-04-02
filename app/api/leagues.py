@@ -24,3 +24,24 @@ def get_league(league_id: int, db: Session = Depends(get_db)):
     if not league:
         raise HTTPException(status_code=404, detail="League not found")
     return {"id": league.id, "name": league.name, "status": league.status}
+
+
+from app.models.league import LeagueTeam
+
+
+@router.get("/{league_id}/teams")
+def get_league_teams(league_id: int, db: Session = Depends(get_db)):
+    teams = (
+        db.query(LeagueTeam)
+        .filter(LeagueTeam.league_id == league_id)
+        .all()
+    )
+
+    return [
+        {
+            "id": team.id,
+            "name": team.name,
+            "master_team_id": team.master_team_id,
+        }
+        for team in teams
+    ]
