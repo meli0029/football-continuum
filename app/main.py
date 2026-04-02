@@ -5,6 +5,7 @@ from app.api.seed import router as seed_router
 from app.api.leagues import router as leagues_router
 import app.models.master
 import app.models.league
+import app.models.user
 
 Base.metadata.create_all(bind=engine)
 
