@@ -28,6 +28,7 @@ class LeagueTeam(Base):
     league_id: Mapped[int] = mapped_column(ForeignKey("league.id"), index=True)
     master_team_id: Mapped[int] = mapped_column(ForeignKey("master_team.id"), index=True)
     name: Mapped[str] = mapped_column(String(100), index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id"), nullable=True, index=True)
 
 
 class LeagueStadium(Base):
@@ -51,3 +52,4 @@ class LeaguePlayer(Base):
     name: Mapped[str] = mapped_column(String(100), index=True)
     position: Mapped[str] = mapped_column(String(20), index=True)
     overall: Mapped[int] = mapped_column(Integer, index=True)
+    

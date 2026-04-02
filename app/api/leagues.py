@@ -4,6 +4,10 @@ from app.db import get_db
 from app.schemas.league import CreateLeagueRequest
 from app.models.league import League
 from app.services.league_service import create_league_universe
+from app.models.league import LeagueTeam
+from app.models.user import User
+from app.models.league import LeagueTeam
+
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
 
@@ -26,7 +30,35 @@ def get_league(league_id: int, db: Session = Depends(get_db)):
     return {"id": league.id, "name": league.name, "status": league.status}
 
 
-from app.models.league import LeagueTeam
+@router.post("/{league_id}/teams/{team_id}/claim")
+def claim_team(league_id: int, team_id: int, user_id: int, db: Session = Depends(get_db)):
+    team = (
+        db.query(LeagueTeam)
+        .filter(
+            LeagueTeam.id == team_id,
+            LeagueTeam.league_id == league_id,
+        )
+        .first()
+    )
+
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    if team.user_id is not None:
+        raise HTTPException(status_code=400, detail="Team already claimed")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    team.user_id = user_id
+    db.commit()
+
+    return {
+        "team_id": team.id,
+        "team_name": team.name,
+        "user_id": user_id,
+    }
 
 
 @router.get("/{league_id}/teams")
