@@ -14,6 +14,11 @@ router = APIRouter(prefix="/leagues", tags=["leagues"])
 
 @router.post("")
 def create_league(payload: CreateLeagueRequest, db: Session = Depends(get_db)):
+
+    # 👇 ADD THIS RIGHT HERE (first line inside function)
+    if not payload.competition_ids:
+        raise HTTPException(status_code=400, detail="competition_ids required")
+
     existing = db.query(League).filter(League.name == payload.name).first()
     if existing:
         raise HTTPException(status_code=400, detail="League name already exists")
@@ -77,3 +82,36 @@ def get_league_teams(league_id: int, db: Session = Depends(get_db)):
         }
         for team in teams
     ]
+
+@router.get("/{league_id}/summary")
+def league_summary(league_id: int, db: Session = Depends(get_db)):
+    # total teams
+    total_teams = (
+        db.query(LeagueTeam)
+        .filter(LeagueTeam.league_id == league_id)
+        .count()
+    )
+
+    # claimed teams
+    claimed_teams = (
+        db.query(LeagueTeam)
+        .filter(
+            LeagueTeam.league_id == league_id,
+            LeagueTeam.user_id.isnot(None),
+        )
+        .count()
+    )
+
+    # total players
+    total_players = (
+        db.query(LeaguePlayer)
+        .filter(LeaguePlayer.league_id == league_id)
+        .count()
+    )
+
+    return {
+        "league_id": league_id,
+        "total_teams": total_teams,
+        "claimed_teams": claimed_teams,
+        "total_players": total_players,
+    }
